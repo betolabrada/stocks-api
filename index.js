@@ -1,3 +1,5 @@
+import { PostgrestClient } from '@supabase/postgrest-js'
+
 addEventListener('fetch', event => {
   event.respondWith(handleRequest(event.request))
 })
@@ -6,5 +8,16 @@ addEventListener('fetch', event => {
  * @param {Request} request
  */
 async function handleRequest(request) {
-  return new Response('Hello')
+  const client = new PostgrestClient(POSTGREST_ENDPOINT, {
+    fetch: (...args) => fetch(...args),
+  })
+  const { data, error } = await client
+    .from('users')
+    .select()
+
+  return new Response(JSON.stringify(data), {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
 }
