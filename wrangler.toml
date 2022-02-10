@@ -1,0 +1,8 @@
+name = "stocks-api"
+type = "javascript"
+
+account_id = "a78ecf5b3c298c24cd0f31b0ffee58ae"
+workers_dev = true
+route = ""
+zone_id = ""
+compatibility_date = "2022-02-10"
