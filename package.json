@@ -14,6 +14,7 @@
     "prettier": "^1.18.2"
   },
   "dependencies": {
-    "@supabase/postgrest-js": "^0.36.0"
+    "@supabase/postgrest-js": "^0.36.0",
+    "itty-router": "^2.4.10"
   }
 }
