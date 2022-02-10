@@ -1,5 +1,6 @@
 name = "stocks-api"
-type = "javascript"
+type = "webpack"
+webpack_config = "webpack.config.js"
 
 account_id = "a78ecf5b3c298c24cd0f31b0ffee58ae"
 workers_dev = true
