@@ -14,7 +14,9 @@
     "prettier": "^1.18.2"
   },
   "dependencies": {
+    "@aws-sdk/client-sesv2": "^3.50.0",
     "@supabase/postgrest-js": "^0.36.0",
+    "aws-sdk": "^2.465.0",
     "itty-router": "^2.4.10",
     "jsonwebtoken": "^8.5.1"
   }

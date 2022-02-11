@@ -1,6 +1,9 @@
 import { PostgrestClient } from '@supabase/postgrest-js'
 import { Router } from 'itty-router'
 import * as jwt from 'jsonwebtoken'
+import * as AWS from 'aws-sdk'
+
+const ses = new AWS.SES({ region: 'us-east-2' })
 
 const client = new PostgrestClient(POSTGREST_ENDPOINT, {
   fetch: (...args) => fetch(...args),
@@ -21,6 +24,7 @@ const requireUser = (request) => {
     if (!decoded.user) {
       return new Response('Invalid token', { status: 401 })
     }
+    request.user = decoded.user
   } catch (error) {
     return new Response('Error verifying token', { status: 500 })
   }
@@ -75,6 +79,53 @@ router.post('/stocks', requireUser, async (request) => {
   })
 })
 
+// @route   PUT api/stocks/:id
+// @desc    Edit a stock
+// @access  Private
+router.put('/stocks/:id', requireUser, sendMail, async (request) => {
+  const id = request.params.id
+  const stockData = await request.json()
+
+  const { data: stock, error } = await client
+    .from('stocks')
+    .update({
+      ...stockData,
+      'edited_by': request.user.id
+    })
+    .match({ id })
+
+  if (error) throw error
+
+  return new Response(JSON.stringify({ stock }), {
+    headers: { 'content-type': 'application/json' },
+  })
+})
+
+// Send mail middleware
+const sendMail = async (request) => {
+
+  // Get all emails
+  const { data: emails, error } = await client
+    .from('users')
+    .select('email')
+
+  if (error) return error
+
+  const params = {
+    Destination: {
+      ToAddresses: emails
+    },
+    Message: {
+      Body: {
+        Text: { Data: 'This is the body'}
+      },
+      Subject: 'Test Email',
+    },
+    Source: 'albertolabrada99@gmail.com'
+  }
+  await ses.sendEmail(params).promise()
+}
+
 
 // @route   POST api/auth/login
 // @desc    Logs in user
@@ -99,6 +150,7 @@ router.post('/auth/login', async (request) => {
   const payload = {
     user: {
       id: user.id,
+      username: user.username
     },
   }
 
@@ -109,9 +161,8 @@ router.post('/auth/login', async (request) => {
 
 // @route   *
 // @desc    Any other route will return Not Found with 404 Status
-router.all('*', () => new Response("Not Found", { status: 404 }))
+router.all('*', () => new Response("404 Not Found", { status: 404 }))
 
 addEventListener('fetch', event => {
-  console.log('headers', JSON.stringify(event.request.headers));
   event.respondWith(router.handle(event.request))
 })
