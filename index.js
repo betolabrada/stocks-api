@@ -1,9 +1,9 @@
 import { PostgrestClient } from '@supabase/postgrest-js'
 import { Router } from 'itty-router'
 import * as jwt from 'jsonwebtoken'
-import * as AWS from 'aws-sdk'
+import { SES } from 'aws-sdk'
 
-const ses = new AWS.SES({ region: 'us-east-2' })
+const ses = new SES({ apiVersion: '2010-12-01' })
 
 const client = new PostgrestClient(POSTGREST_ENDPOINT, {
   fetch: (...args) => fetch(...args),
@@ -113,17 +113,42 @@ const sendMail = async (request) => {
 
   const params = {
     Destination: {
-      ToAddresses: emails
-    },
-    Message: {
+      BccAddresses: [
+      ], 
+      CcAddresses: [
+         emails.slice(1)
+      ], 
+      ToAddresses: [
+         emails[0]
+      ]
+     }, 
+     Message: {
       Body: {
-        Text: { Data: 'This is the body'}
-      },
-      Subject: 'Test Email',
-    },
-    Source: 'albertolabrada99@gmail.com'
+       Html: {
+        Charset: "UTF-8", 
+        Data: "This message body contains HTML formatting. It can, for example, contain links like this one: <a class=\"ulink\" href=\"http://docs.aws.amazon.com/ses/latest/DeveloperGuide\" target=\"_blank\">Amazon SES Developer Guide</a>."
+       }, 
+       Text: {
+        Charset: "UTF-8", 
+        Data: "This is the message body in text format."
+       }
+      }, 
+      Subject: {
+       Charset: "UTF-8", 
+       Data: "Test email"
+      }
+     }, 
+     ReplyToAddresses: [
+     ], 
+     ReturnPath: "", 
+     ReturnPathArn: "", 
+     Source: "albertolabrada99@gmail.com", 
+     SourceArn: ""
   }
-  await ses.sendEmail(params).promise()
+  ses.sendEmail(params, function(err, data) {
+    if (err) console.log(err, err.stack); // an error occurred
+    else     console.log(data);           // successful response
+  })
 }
 
 
