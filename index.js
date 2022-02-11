@@ -52,6 +52,16 @@ router.get('/stocks/:id', async ({ params }) => {
 
   const stock = data.length ? data[0] : null
 
+  // Update views
+  if (stock) {
+    const { error } = await client
+      .from('stocks')
+      .update({ views: stock.views + 1 })
+      .match({ id: stock.id })
+
+    if (error) throw error
+  }
+
   return new Response(JSON.stringify({ stock }), {
       headers: { 'content-type': 'application/json' },
       status: stock ? 200 : 404
@@ -105,6 +115,28 @@ router.post('/auth/login', async (request) => {
   const token = jwt.sign(payload, JWT_SECRET, { expiresIn: 360000 })
   return new Response(JSON.stringify({ token }), { status: 200 })
 });
+
+// @route   PUT api/stocks/:id
+// @desc    Edit a stock
+// @access  Private
+router.put('/stocks/:id', requireUser, async (request) => {
+  const id = request.params.id
+  const stockData = await request.json()
+
+  const { data: stock, error } = await client
+    .from('stocks')
+    .update({
+      ...stockData,
+      'edited_by': request.user.id
+    })
+    .match({ id })
+
+  if (error) throw error
+
+  return new Response(JSON.stringify({ stock }), {
+    headers: { 'content-type': 'application/json' },
+  })
+})
 
 
 // @route   *
